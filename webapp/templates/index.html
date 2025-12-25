@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewDriver - Head Controlled Car Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            background: rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 3em;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.2em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+        }
+
+        .game-area {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 20px;
+            position: relative;
+        }
+
+        #game-canvas {
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(180deg, #87CEEB 0%, #228B22 100%);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .road {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 100%;
+            background: #333;
+            border-left: 5px solid white;
+            border-right: 5px solid white;
+        }
+
+        .road-lines {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: repeating-linear-gradient(to bottom,
+                    white 0px,
+                    white 40px,
+                    transparent 40px,
+                    transparent 80px);
+            animation: roadMove 0.5s linear infinite;
+        }
+
+        @keyframes roadMove {
+            from {
+                background-position: 0 0;
+            }
+
+            to {
+                background-position: 0 80px;
+            }
+        }
+
+        .car {
+            position: absolute;
+            bottom: 50px;
+            width: 50px;
+            height: 80px;
+            background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
+            border-radius: 10px;
+            transition: left 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .car::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 5px;
+            right: 5px;
+            height: 25px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+        }
+
+        .car::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 8px;
+            width: 10px;
+            height: 10px;
+            background: yellow;
+            border-radius: 50%;
+            box-shadow: 24px 0 0 yellow;
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #e74c3c;
+            border-radius: 50%;
+            animation: obstacleMove 2s linear;
+        }
+
+        @keyframes obstacleMove {
+            from {
+                top: -50px;
+            }
+
+            to {
+                top: 550px;
+            }
+        }
+
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .webcam-container {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #webcam {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #1a1a2e;
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #ff4757, #ff6b81);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .detection-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .detection-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+
+        .direction-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .dir-box {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0 5px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .dir-box.active {
+            background: #00ff88;
+            color: #1a1a2e;
+            font-weight: bold;
+        }
+
+        .speed-bar {
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .speed-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00d4ff);
+            transition: width 0.3s;
+            border-radius: 10px;
+        }
+
+        .action-indicator {
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .action-indicator.accelerer {
+            background: #00ff88;
+            color: #1a1a2e;
+        }
+
+        .action-indicator.stop {
+            background: #ff4757;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🚗 NewDriver</h1>
+            <p class="subtitle">Head-Controlled Car Game powered by YOLO AI</p>
+        </header>
+
+        <div class="main-content">
+            <div class="game-area">
+                <div id="game-canvas">
+                    <div class="road">
+                        <div class="road-lines"></div>
+                    </div>
+                    <div class="car" id="car"></div>
+                </div>
+
+                <div class="controls" style="margin-top: 20px;">
+                    <button class="btn btn-start" onclick="startGame()">▶ START</button>
+                    <button class="btn btn-stop" onclick="stopGame()">■ STOP</button>
+                </div>
+            </div>
+
+            <div class="side-panel">
+                <div class="panel">
+                    <h3>📹 Webcam Feed</h3>
+                    <div class="webcam-container">
+                        <img id="webcam" src="/video_feed" alt="Webcam">
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>📊 Stats</h3>
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="stat-value" id="score">0</div>
+                            <div class="stat-label">Score</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="speed">0</div>
+                            <div class="stat-label">km/h</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="fps">0</div>
+                            <div class="stat-label">FPS</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="status">OFF</div>
+                            <div class="stat-label">Status</div>
+                        </div>
+                    </div>
+
+                    <div class="speed-bar">
+                        <div class="speed-fill" id="speed-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>🎮 Controls</h3>
+                    <div class="direction-indicator">
+                        <div class="dir-box" id="dir-left">◀ GAUCHE</div>
+                        <div class="dir-box" id="dir-center">● MILIEU</div>
+                        <div class="dir-box" id="dir-right">DROITE ▶</div>
+                    </div>
+                    <div class="action-indicator stop" id="action-indicator">STOP</div>
+                </div>
+
+                <div class="panel">
+                    <h3>👁️ Eye Tracking</h3>
+                    <div class="eye-status">
+                        <div class="eye-indicator" id="eye-indicator">
+                            <span id="eye-icon">👁️</span>
+                            <span id="eye-status-text">En attente...</span>
+                        </div>
+                        <div class="gaze-bar">
+                            <div class="gaze-marker" id="gaze-marker"></div>
+                            <div class="gaze-labels">
+                                <span>← Gauche</span>
+                                <span>Centre</span>
+                                <span>Droite →</span>
+                            </div>
+                        </div>
+                        <div class="eyes-state" id="eyes-state">
+                            Yeux: --
+                        </div>
+                    </div>
+                    <style>
+                        .eye-status {
+                            padding: 10px 0;
+                        }
+
+                        .eye-indicator {
+                            display: flex;
+                            align-items: center;
+                            gap: 15px;
+                            padding: 15px;
+                            border-radius: 10px;
+                            margin-bottom: 15px;
+                            transition: all 0.3s;
+                        }
+
+                        .eye-indicator.looking {
+                            background: #00ff88;
+                            color: #1a1a2e;
+                        }
+
+                        .eye-indicator.not-looking {
+                            background: #ff4757;
+                            color: white;
+                        }
+
+                        #eye-icon {
+                            font-size: 2em;
+                        }
+
+                        #eye-status-text {
+                            font-weight: bold;
+                            font-size: 1.1em;
+                        }
+
+                        .gaze-bar {
+                            height: 30px;
+                            background: linear-gradient(90deg, #ff4757 0%, #00ff88 35%, #00ff88 65%, #ff4757 100%);
+                            border-radius: 15px;
+                            position: relative;
+                            margin-bottom: 5px;
+                        }
+
+                        .gaze-marker {
+                            position: absolute;
+                            top: 50%;
+                            transform: translate(-50%, -50%);
+                            width: 20px;
+                            height: 20px;
+                            background: white;
+                            border-radius: 50%;
+                            border: 3px solid #1a1a2e;
+                            transition: left 0.2s;
+                            left: 50%;
+                        }
+
+                        .gaze-labels {
+                            display: flex;
+                            justify-content: space-between;
+                            font-size: 0.8em;
+                            color: #888;
+                            padding: 0 5px;
+                        }
+
+                        .eyes-state {
+                            text-align: center;
+                            padding: 10px;
+                            background: rgba(255, 255, 255, 0.1);
+                            border-radius: 8px;
+                            margin-top: 10px;
+                            font-weight: bold;
+                        }
+
+                        .eyes-state.open {
+                            color: #00ff88;
+                        }
+
+                        .eyes-state.closed {
+                            color: #ff4757;
+                        }
+                    </style>
+                </div>
+
+                <div class="panel">
+                    <h3>🔍 Detections</h3>
+                    <div class="detection-list" id="detections">
+                        <div class="detection-item">
+                            <span>En attente...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let updateInterval;
+
+        function startGame() {
+            fetch('/start', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    console.log('Started:', data);
+                    document.getElementById('status').textContent = 'ON';
+                    document.getElementById('webcam').src = '/video_feed?' + Date.now();
+                    updateInterval = setInterval(updateState, 100);
+                });
+        }
+
+        function stopGame() {
+            fetch('/stop', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    console.log('Stopped:', data);
+                    document.getElementById('status').textContent = 'OFF';
+                    clearInterval(updateInterval);
+                });
+        }
+
+        function updateState() {
+            fetch('/state')
+                .then(r => r.json())
+                .then(state => {
+                    // Update stats
+                    document.getElementById('score').textContent = state.score;
+                    document.getElementById('speed').textContent = state.speed;
+                    document.getElementById('fps').textContent = state.fps;
+                    document.getElementById('speed-bar').style.width = state.speed + '%';
+
+                    // Update car position
+                    const car = document.getElementById('car');
+                    const gameCanvas = document.getElementById('game-canvas');
+                    const roadWidth = gameCanvas.offsetWidth * 0.6;
+                    const roadLeft = (gameCanvas.offsetWidth - roadWidth) / 2;
+                    const carLeft = roadLeft + (state.car_x / 100) * roadWidth - 25;
+                    car.style.left = carLeft + 'px';
+
+                    // Update direction indicators
+                    document.querySelectorAll('.dir-box').forEach(el => el.classList.remove('active'));
+                    if (state.direction === 'GAUCHE') {
+                        document.getElementById('dir-left').classList.add('active');
+                    } else if (state.direction === 'DROITE') {
+                        document.getElementById('dir-right').classList.add('active');
+                    } else {
+                        document.getElementById('dir-center').classList.add('active');
+                    }
+
+                    // Update action
+                    const actionEl = document.getElementById('action-indicator');
+                    actionEl.textContent = state.action;
+                    actionEl.className = 'action-indicator ' + state.action.toLowerCase();
+
+                    // Update detections
+                    const detectionsEl = document.getElementById('detections');
+                    if (state.detections && state.detections.length > 0) {
+                        detectionsEl.innerHTML = state.detections.map(d =>
+                            `<div class="detection-item">
+                                <span>${d.class}</span>
+                                <span>${(d.conf * 100).toFixed(0)}%</span>
+                            </div>`
+                        ).join('');
+                    }
+
+                    // Update eye tracking
+                    const eyeIndicator = document.getElementById('eye-indicator');
+                    const eyeStatusText = document.getElementById('eye-status-text');
+                    const eyeIcon = document.getElementById('eye-icon');
+                    const gazeMarker = document.getElementById('gaze-marker');
+                    const eyesState = document.getElementById('eyes-state');
+
+                    if (state.looking_at_screen) {
+                        eyeIndicator.className = 'eye-indicator looking';
+                        eyeStatusText.textContent = 'REGARDE L\'ECRAN ✓';
+                        eyeIcon.textContent = '👁️';
+                    } else {
+                        eyeIndicator.className = 'eye-indicator not-looking';
+                        eyeStatusText.textContent = 'NE REGARDE PAS ✗';
+                        eyeIcon.textContent = '🚫';
+                    }
+
+                    // Update gaze marker position (0-1 -> 0-100%)
+                    if (state.gaze_ratio !== undefined) {
+                        gazeMarker.style.left = (state.gaze_ratio * 100) + '%';
+                    }
+
+                    // Update eyes open/closed
+                    if (state.eyes_open) {
+                        eyesState.textContent = 'Yeux: OUVERTS 👀';
+                        eyesState.className = 'eyes-state open';
+                    } else {
+                        eyesState.textContent = 'Yeux: FERMES 😴';
+                        eyesState.className = 'eyes-state closed';
+                    }
+                });
+        }
+    </script>
+</body>
+
+</html>
