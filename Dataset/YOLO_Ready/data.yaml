@@ -1,0 +1,6 @@
+path: /Users/leod/Documents/Dev/NewDriver/Dataset/YOLO_Ready
+train: train/images
+val: val/images
+
+nc: 5
+names: ['visage_serieux', 'livre_droite', 'livre_milieu', 'livre_gauche', 'visage_sourire']

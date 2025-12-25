@@ -1,0 +1,67 @@
+# NewDriver .gitignore
+
+# Images et photos (ne pas upload sur GitHub)
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.gif
+*.tiff
+*.webp
+
+# Dossiers de datasets avec images
+Dataset/png/
+Dataset/labelledImg/*.jpg
+Dataset/labelledImg/*.png
+Dataset/YOLO_Ready/train/images/
+Dataset/YOLO_Ready/val/images/
+Gen/img/
+Gen/Collections/
+Gen/labelImg/*.jpg
+Gen/labelImg/*.png
+
+# Modeles entraines (trop gros)
+*.pt
+training/runs/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+
+# Environnements
+.env
+.venv
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+logs/
+
+# Captures du jeu
+captures/
+
+# Cache YOLO
+*.cache
+labels.cache

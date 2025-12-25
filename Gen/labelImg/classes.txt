@@ -1,0 +1,5 @@
+visage_serieux
+livre_droite
+livre_milieu
+livre_gauche
+visage_sourire
