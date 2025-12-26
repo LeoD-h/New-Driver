@@ -1,61 +1,69 @@
-# NewDriver
+# NewDriver 🚗
 
-Jeu de voiture controle par detection de la tete via YOLO.
+Jeu de voiture contrôlé par la tête et le regard via YOLO + Eye Tracking.
 
-## Structure du projet
+## 🎮 Deux versions
 
-```
-NewDriver/
-├── README.md
-├── game/                       # JEU PRINCIPAL
-│   ├── main.py                # Point d'entree (python game/main.py)
-│   ├── constants.py           # Constantes
-│   ├── entities.py            # Voiture et obstacles
-│   ├── tracker.py             # Detection YOLO
-│   └── ui.py                  # Interface utilisateur
-├── training/                   # Entrainement du modele
-│   ├── train.py               # Script d'entrainement
-│   └── runs/detect/           # Modeles entraines
-├── Dataset/                    # Donnees d'entrainement
-│   ├── labelledImg/           # Images labellisees
-│   └── YOLO_Ready/            # Dataset formate YOLO
-└── Gen/                        # Outils de generation
-```
-
-## Classes du modele
-
-| ID | Nom | Action |
-|----|-----|--------|
-| 0 | visage_serieux | Stop/Freiner |
-| 1 | livre_droite | Tourner a droite |
-| 2 | livre_milieu | Tout droit |
-| 3 | livre_gauche | Tourner a gauche |
-| 4 | visage_sourire | Accelerer |
-
-## Utilisation
-
-### Lancer le jeu
+### Version Pygame (Desktop)
 ```bash
-cd NewDriver
 python game/main.py
 ```
 
-### Entrainer le modele
+### Version Web (Flask)
 ```bash
-cd NewDriver
-python training/train.py
+cd webapp
+python app.py
+# Ouvrir http://localhost:8080
 ```
 
-## Controles du jeu
+## 📁 Structure
 
-- **Livre a GAUCHE** -> Voiture tourne a gauche
-- **Livre au MILIEU** -> Voiture va tout droit
-- **Livre a DROITE** -> Voiture tourne a droite
-- **SOURIRE** -> Accelerer
-- **SERIEUX** -> Freiner/Stop
+```
+NewDriver/
+├── game/                  # Version Pygame
+├── webapp/                # Version Web Flask
+├── training/              # Entrainement YOLO
+├── scripts/               # Outils
+├── Dataset/               # Données
+└── Gen/                   # Génération
+```
 
-### Clavier
-- **T** : Mode test (desactive obstacles)
-- **ESPACE** : Rejouer
-- **ESC** : Quitter
-- **Fleches** : Controle manuel (debug)
+## 🤖 Classes YOLO
+
+| ID | Nom | Action |
+|----|-----|--------|
+| 0 | visage_serieux | Freiner |
+| 1 | livre_droite | Tourner droite |
+| 2 | livre_milieu | Tout droit |
+| 3 | livre_gauche | Tourner gauche |
+| 4 | visage_sourire | Accélérer |
+
+## 👁️ Eye Tracking
+
+- **Regarde l'écran** → Peut accélérer
+- **Ne regarde pas** → Freine automatiquement
+- **Yeux fermés** → Détection somnolence
+
+## 🎮 Contrôles
+
+| Action | Contrôle |
+|--------|----------|
+| Direction | Position du livre |
+| Accélérer | Sourire |
+| Freiner | Visage sérieux |
+| Mode Test | Touche T |
+
+## 🚀 Scripts
+
+```bash
+python scripts/train.py          # Entraîner
+python scripts/test_interface.py # Tester webcam
+python scripts/organizer.py      # Créer YOLO_Ready
+```
+
+## ⚙️ Environnement
+
+```bash
+conda activate yolo
+pip install ultralytics pygame flask opencv-python
+```

@@ -248,10 +248,10 @@ def generate_frames():
         with state.lock:
             color = (0, 255, 0) if state.looking_at_screen else (0, 0, 255)
             text = f"Regard: {state.eye_direction}"
-            cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
+            cv2.putText(frame, text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
             
             eyes_text = "Yeux: OUVERTS" if state.eyes_open else "Yeux: FERMES"
-            cv2.putText(frame, eyes_text, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
+            cv2.putText(frame, eyes_text, (10, 85), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
         
         _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
         yield (b'--frame\r\n'
