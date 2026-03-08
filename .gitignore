@@ -69,3 +69,4 @@ captures/
 # YOLO cache
 *.cache
 labels.cache
+Gen/
