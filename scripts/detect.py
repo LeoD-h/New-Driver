@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script de detection simple pour tester le modele
+Simple detection script to test the YOLO model
 """
 
 from pathlib import Path
@@ -9,7 +9,7 @@ import cv2
 
 
 def find_model():
-    """Trouve le dernier modele"""
+    """Find the latest trained model"""
     runs_path = Path("/Users/leod/Documents/Dev/NewDriver/training/runs/detect")
     if runs_path.exists():
         train_dirs = sorted(
@@ -26,18 +26,18 @@ def find_model():
 def main():
     model_path = find_model()
     if not model_path:
-        print("Aucun modele trouve!")
+        print("No model found!")
         return
         
-    print(f"Modele: {model_path}")
+    print(f"Model: {model_path}")
     model = YOLO(str(model_path))
     
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
-        print("Erreur webcam")
+        print("Webcam error")
         return
         
-    print("Appuyez sur 'q' pour quitter")
+    print("Press 'q' to quit")
     
     while True:
         ret, frame = cap.read()

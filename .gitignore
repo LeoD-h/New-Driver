@@ -1,6 +1,6 @@
 # NewDriver .gitignore
 
-# Images et photos (ne pas upload sur GitHub)
+# Images and photos (not uploaded to GitHub)
 *.jpg
 *.jpeg
 *.png
@@ -9,7 +9,7 @@
 *.tiff
 *.webp
 
-# Dossiers de datasets avec images
+# Dataset folders with images
 Dataset/png/
 Dataset/labelledImg/*.jpg
 Dataset/labelledImg/*.png
@@ -20,11 +20,11 @@ Gen/Collections/
 Gen/labelImg/*.jpg
 Gen/labelImg/*.png
 
-# Modeles entraines (trop gros)
+# Trained models (too large)
 *.pt
 training/runs/
 
-# Cache Python
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
@@ -33,7 +33,7 @@ __pycache__/
 *.egg-info/
 .eggs/
 
-# Environnements
+# Environments
 .env
 .venv
 venv/
@@ -59,9 +59,9 @@ ENV/
 *.log
 logs/
 
-# Captures du jeu
+# Game captures
 captures/
 
-# Cache YOLO
+# YOLO cache
 *.cache
 labels.cache

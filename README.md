@@ -1,67 +1,80 @@
-# NewDriver 🚗
+# NewDriver
 
-Jeu de voiture contrôlé par la tête et le regard via YOLO + Eye Tracking.
+A car game controlled by head position and facial expression using YOLO object detection and eye tracking.
 
-## 🎮 Deux versions
+The player holds a book in front of the camera. The position of the book (left, center, right) controls the steering direction. Smiling accelerates the car, while a serious face brakes. Eye tracking detects whether the player is looking at the screen and if their eyes are open.
 
-### Version Pygame (Desktop)
+
+## Two Versions
+
+### Desktop (Pygame)
+
 ```bash
 python game/main.py
 ```
 
-### Version Web (Flask)
+### Web (Flask)
+
 ```bash
 cd webapp
 python app.py
-# Ouvrir http://localhost:8080
+# Open http://localhost:8080
 ```
 
-## 📁 Structure
+
+## Project Structure
 
 ```
 NewDriver/
-├── game/                  # Version Pygame
-├── webapp/                # Version Web Flask
-├── training/              # Entrainement YOLO
-├── scripts/               # Outils
-├── Dataset/               # Données
-└── Gen/                   # Génération
+  game/           Desktop game (Pygame)
+  webapp/         Web version (Flask)
+  training/       YOLO training
+  scripts/        Utilities (detection, data prep, testing)
+  Dataset/        Training data
+  Gen/            Image collection and labeling tools
 ```
 
-## 🤖 Classes YOLO
 
-| ID | Nom | Action |
-|----|-----|--------|
-| 0 | visage_serieux | Freiner |
-| 1 | livre_droite | Tourner droite |
-| 2 | livre_milieu | Tout droit |
-| 3 | livre_gauche | Tourner gauche |
-| 4 | visage_sourire | Accélérer |
+## YOLO Classes
 
-## 👁️ Eye Tracking
+| ID | Name             | Translation   | Action     |
+|----|------------------|---------------|------------|
+| 0  | visage_serieux   | serious face  | Brake      |
+| 1  | livre_droite     | book right    | Turn right |
+| 2  | livre_milieu     | book center   | Go straight|
+| 3  | livre_gauche     | book left     | Turn left  |
+| 4  | visage_sourire   | smiling face  | Accelerate |
 
-- **Regarde l'écran** → Peut accélérer
-- **Ne regarde pas** → Freine automatiquement
-- **Yeux fermés** → Détection somnolence
 
-## 🎮 Contrôles
+## Eye Tracking
 
-| Action | Contrôle |
-|--------|----------|
-| Direction | Position du livre |
-| Accélérer | Sourire |
-| Freiner | Visage sérieux |
-| Mode Test | Touche T |
+- Looking at the screen: the player can accelerate.
+- Looking away: the car brakes automatically.
+- Eyes closed: drowsiness detection.
 
-## 🚀 Scripts
+
+## Controls
+
+| Action      | Input              |
+|-------------|--------------------|
+| Steering    | Book position      |
+| Accelerate  | Smile              |
+| Brake       | Serious face       |
+| Test mode   | T key              |
+
+
+## Scripts
 
 ```bash
-python scripts/train.py          # Entraîner
-python scripts/test_interface.py # Tester webcam
-python scripts/organizer.py      # Créer YOLO_Ready
+python scripts/train.py            # Train the YOLO model
+python scripts/test_interface.py   # Test the webcam detection
+python scripts/organizer.py        # Build the YOLO_Ready dataset
+python scripts/convert_xml.py      # Convert XML labels to YOLO format
+python scripts/detect.py           # Quick webcam detection test
 ```
 
-## ⚙️ Environnement
+
+## Environment Setup
 
 ```bash
 conda activate yolo

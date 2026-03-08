@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -410,9 +410,9 @@
             <div class="panel">
                 <div class="panel-title">Direction</div>
                 <div class="direction-row">
-                    <div class="dir-btn" id="dir-gauche">← GAUCHE</div>
-                    <div class="dir-btn" id="dir-milieu">MILIEU</div>
-                    <div class="dir-btn" id="dir-droite">DROITE →</div>
+                    <div class="dir-btn" id="dir-gauche">LEFT</div>
+                    <div class="dir-btn" id="dir-milieu">CENTER</div>
+                    <div class="dir-btn" id="dir-droite">RIGHT</div>
                 </div>
                 <div class="action-bar stop" id="action-bar">STOP</div>
             </div>
@@ -420,7 +420,7 @@
             <div class="panel">
                 <div class="panel-title">Eye Tracking</div>
                 <div class="eye-status looking" id="eye-status">
-                    <span class="eye-icon" id="eye-icon">👁️</span>
+                    <span class="eye-icon" id="eye-icon">[O]</span>
                     <span class="eye-text" id="eye-text">Looking at screen</span>
                 </div>
                 <div class="gaze-bar">
@@ -541,11 +541,11 @@
                 const et = document.getElementById('eye-text');
                 if (state.looking_at_screen) {
                     es.className = 'eye-status looking';
-                    ei.textContent = '👁️';
+                    ei.textContent = '[O]';
                     et.textContent = 'Looking at screen';
                 } else {
                     es.className = 'eye-status not-looking';
-                    ei.textContent = '⚠️';
+                    ei.textContent = '[!]';
                     et.textContent = 'Not looking!';
                 }
 

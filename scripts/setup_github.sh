@@ -1,40 +1,40 @@
 #!/bin/bash
-# Script de setup GitHub pour NewDriver
+# GitHub setup script for NewDriver
 
 set -e
 
 cd /Users/leod/Documents/Dev/NewDriver
 
-echo "=== Setup GitHub pour NewDriver ==="
+echo "=== GitHub setup for NewDriver ==="
 
-# Initialiser Git si pas deja fait
+# Initialize Git if not already done
 if [ ! -d ".git" ]; then
-    echo "Initialisation de Git..."
+    echo "Initializing Git..."
     git init
 else
-    echo "Git deja initialise"
+    echo "Git already initialized"
 fi
 
-# Ajouter tous les fichiers (le .gitignore exclura les images)
-echo "Ajout des fichiers..."
+# Add all files (.gitignore will exclude images)
+echo "Adding files..."
 git add .
 
-# Premier commit
-echo "Creation du commit..."
+# First commit
+echo "Creating commit..."
 git commit -m "Initial commit - NewDriver YOLO car game"
 
-# Branche main
+# Main branch
 git branch -M main
 
-# Ajouter le remote
-echo "Configuration du remote..."
+# Add remote
+echo "Configuring remote..."
 git remote remove origin 2>/dev/null || true
 git remote add origin https://github.com/LeoD-h/New-Driver.git
 
 # Push
-echo "Push vers GitHub..."
+echo "Pushing to GitHub..."
 git push -u origin main
 
 echo ""
-echo "=== Setup termine! ==="
+echo "=== Setup complete! ==="
 echo "Repository: https://github.com/LeoD-h/New-Driver"

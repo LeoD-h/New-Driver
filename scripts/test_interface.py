@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Interface de test pour le modele YOLO - Detection en temps réel
+YOLO test interface - Real-time detection with GUI
 """
 
 import tkinter as tk
@@ -15,18 +15,17 @@ from pathlib import Path
 try:
     from ultralytics import YOLO
 except ImportError:
-    print("Erreur: ultralytics n'est pas installe. Installez-le avec: pip install ultralytics")
+    print("Error: ultralytics is not installed. Install with: pip install ultralytics")
     exit(1)
 
 
 class YOLOTestInterface:
     def __init__(self, root):
         self.root = root
-        self.root.title("NewDriver - Test Interface YOLO")
+        self.root.title("NewDriver - YOLO Test Interface")
         self.root.geometry("1200x800")
         self.root.configure(bg='#1a1a2e')
         
-        # Variables
         self.model = None
         self.cap = None
         self.running = False
@@ -39,7 +38,6 @@ class YOLOTestInterface:
         self.last_fps_time = 0
         self.fps_counter = 0
         
-        # Chemins
         self.base_path = Path("/Users/leod/Documents/Dev/NewDriver")
         self.runs_path = self.base_path / "training" / "runs" / "detect"
         
@@ -47,7 +45,7 @@ class YOLOTestInterface:
         self.find_latest_model()
         
     def setup_ui(self):
-        """Configure l'interface"""
+        """Build the user interface"""
         style = ttk.Style()
         style.theme_use('clam')
         style.configure('TButton', font=('Helvetica', 11), padding=10)
@@ -57,36 +55,36 @@ class YOLOTestInterface:
         main_frame = tk.Frame(self.root, bg='#1a1a2e')
         main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
         
-        header = ttk.Label(main_frame, text="NewDriver - Test du Modele YOLO", style='Header.TLabel')
+        header = ttk.Label(main_frame, text="NewDriver - YOLO Model Test", style='Header.TLabel')
         header.pack(pady=(0, 20))
         
-        # Controles
+        # Controls
         control_frame = tk.Frame(main_frame, bg='#16213e', relief='raised', bd=2)
         control_frame.pack(fill=tk.X, pady=(0, 15))
         
         btn_frame = tk.Frame(control_frame, bg='#16213e')
         btn_frame.pack(pady=15, padx=15)
         
-        self.btn_load = tk.Button(btn_frame, text="Charger Modele", command=self.load_model,
+        self.btn_load = tk.Button(btn_frame, text="Load Model", command=self.load_model,
                                    bg='#0f3460', fg='white', font=('Helvetica', 11, 'bold'),
                                    relief='flat', padx=15, pady=8)
         self.btn_load.pack(side=tk.LEFT, padx=5)
         
-        self.btn_webcam = tk.Button(btn_frame, text="Demarrer Webcam", command=self.toggle_webcam,
+        self.btn_webcam = tk.Button(btn_frame, text="Start Webcam", command=self.toggle_webcam,
                                      bg='#00b894', fg='white', font=('Helvetica', 11, 'bold'),
                                      relief='flat', padx=15, pady=8)
         self.btn_webcam.pack(side=tk.LEFT, padx=5)
         
-        self.btn_image = tk.Button(btn_frame, text="Tester Image", command=self.test_image,
+        self.btn_image = tk.Button(btn_frame, text="Test Image", command=self.test_image,
                                     bg='#6c5ce7', fg='white', font=('Helvetica', 11, 'bold'),
                                     relief='flat', padx=15, pady=8)
         self.btn_image.pack(side=tk.LEFT, padx=5)
         
-        # Slider confiance
+        # Confidence slider
         conf_frame = tk.Frame(control_frame, bg='#16213e')
         conf_frame.pack(pady=(0, 15), padx=15, fill=tk.X)
         
-        ttk.Label(conf_frame, text="Seuil de confiance:").pack(side=tk.LEFT)
+        ttk.Label(conf_frame, text="Confidence threshold:").pack(side=tk.LEFT)
         self.conf_var = tk.DoubleVar(value=0.5)
         self.conf_slider = ttk.Scale(conf_frame, from_=0.1, to=1.0, variable=self.conf_var,
                                       orient=tk.HORIZONTAL, length=200)
@@ -95,7 +93,7 @@ class YOLOTestInterface:
         self.conf_label.pack(side=tk.LEFT)
         self.conf_slider.bind('<Motion>', self.update_conf_label)
         
-        # Video
+        # Video display
         video_frame = tk.Frame(main_frame, bg='#0f3460', relief='sunken', bd=3)
         video_frame.pack(fill=tk.BOTH, expand=True)
         
@@ -104,19 +102,19 @@ class YOLOTestInterface:
         
         self.show_placeholder()
         
-        # Status
+        # Status bar
         status_frame = tk.Frame(main_frame, bg='#16213e', relief='sunken', bd=1)
         status_frame.pack(fill=tk.X, pady=(15, 0))
         
-        self.status_var = tk.StringVar(value="En attente du chargement du modele...")
+        self.status_var = tk.StringVar(value="Waiting for model to be loaded...")
         self.status_label = ttk.Label(status_frame, textvariable=self.status_var)
         self.status_label.pack(pady=8)
         
-        # Detections
+        # Detection log
         self.detection_frame = tk.Frame(main_frame, bg='#16213e', relief='raised', bd=2)
         self.detection_frame.pack(fill=tk.X, pady=(10, 0))
         
-        ttk.Label(self.detection_frame, text="Dernieres detections:", 
+        ttk.Label(self.detection_frame, text="Latest detections:", 
                   font=('Helvetica', 12, 'bold')).pack(anchor='w', padx=10, pady=5)
         
         self.detection_text = tk.Text(self.detection_frame, height=3, bg='#0f3460', fg='#00ff88',
@@ -140,44 +138,44 @@ class YOLOTestInterface:
                 best_path = train_dir / "weights" / "best.pt"
                 last_path = train_dir / "weights" / "last.pt"
                 if best_path.exists():
-                    self.status_var.set(f"Modele trouve: {best_path.name} dans {train_dir.name}")
+                    self.status_var.set(f"Model found: {best_path.name} in {train_dir.name}")
                     self.latest_model_path = best_path
                     return
                 elif last_path.exists():
-                    self.status_var.set(f"Modele trouve: {last_path.name} dans {train_dir.name}")
+                    self.status_var.set(f"Model found: {last_path.name} in {train_dir.name}")
                     self.latest_model_path = last_path
                     return
         self.latest_model_path = None
-        self.status_var.set("Aucun modele trouve. L'entrainement est-il termine?")
+        self.status_var.set("No model found. Is training complete?")
         
     def load_model(self):
         self.find_latest_model()
         
         if self.latest_model_path and self.latest_model_path.exists():
-            response = messagebox.askyesno("Charger modele", 
-                f"Charger le dernier modele?\n\n{self.latest_model_path}")
+            response = messagebox.askyesno("Load model", 
+                f"Load the latest model?\n\n{self.latest_model_path}")
             if response:
                 self._load_model_file(self.latest_model_path)
                 return
         
         filepath = filedialog.askopenfilename(
-            title="Selectionner un modele YOLO",
+            title="Select a YOLO model",
             initialdir=str(self.runs_path),
-            filetypes=[("Modele PyTorch", "*.pt"), ("Tous les fichiers", "*.*")]
+            filetypes=[("PyTorch model", "*.pt"), ("All files", "*.*")]
         )
         if filepath:
             self._load_model_file(Path(filepath))
             
     def _load_model_file(self, path):
         try:
-            self.status_var.set(f"Chargement du modele: {path.name}...")
+            self.status_var.set(f"Loading model: {path.name}...")
             self.root.update()
             self.model = YOLO(str(path))
-            self.status_var.set(f"Modele charge: {path.name}")
-            messagebox.showinfo("Succes", f"Modele charge avec succes!\n{path.name}")
+            self.status_var.set(f"Model loaded: {path.name}")
+            messagebox.showinfo("Success", f"Model loaded successfully!\n{path.name}")
         except Exception as e:
-            self.status_var.set(f"Erreur: {str(e)}")
-            messagebox.showerror("Erreur", f"Impossible de charger le modele:\n{str(e)}")
+            self.status_var.set(f"Error: {str(e)}")
+            messagebox.showerror("Error", f"Cannot load model:\n{str(e)}")
             
     def toggle_webcam(self):
         if self.running:
@@ -187,13 +185,13 @@ class YOLOTestInterface:
             
     def start_webcam(self):
         if self.model is None:
-            messagebox.showwarning("Attention", "Veuillez d'abord charger un modele!")
+            messagebox.showwarning("Warning", "Please load a model first!")
             return
             
         try:
             self.cap = cv2.VideoCapture(0)
             if not self.cap.isOpened():
-                raise Exception("Impossible d'ouvrir la webcam")
+                raise Exception("Cannot open webcam")
             
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -205,23 +203,23 @@ class YOLOTestInterface:
             self.last_fps_time = time.time()
             self.fps_counter = 0
             
-            self.btn_webcam.configure(text="Arreter Webcam", bg='#e74c3c')
-            self.status_var.set("Webcam active - Detection en cours...")
+            self.btn_webcam.configure(text="Stop Webcam", bg='#e74c3c')
+            self.status_var.set("Webcam active - Detection running...")
             
             self.webcam_thread = threading.Thread(target=self.webcam_loop, daemon=True)
             self.webcam_thread.start()
             
         except Exception as e:
-            self.status_var.set(f"Erreur webcam: {str(e)}")
-            messagebox.showerror("Erreur", f"Erreur webcam:\n{str(e)}")
+            self.status_var.set(f"Webcam error: {str(e)}")
+            messagebox.showerror("Error", f"Webcam error:\n{str(e)}")
             
     def stop_webcam(self):
         self.running = False
         if self.cap:
             self.cap.release()
             self.cap = None
-        self.btn_webcam.configure(text="Demarrer Webcam", bg='#00b894')
-        self.status_var.set("Webcam arretee")
+        self.btn_webcam.configure(text="Start Webcam", bg='#00b894')
+        self.status_var.set("Webcam stopped")
         self.show_placeholder()
         
     def webcam_loop(self):
@@ -244,7 +242,6 @@ class YOLOTestInterface:
                 self.fps_counter = 0
                 self.last_fps_time = current_time
             
-            # Detection
             results = self.model(frame, conf=self.conf_var.get(), 
                                 imgsz=self.inference_size, verbose=False)
             
@@ -287,17 +284,17 @@ class YOLOTestInterface:
             self.detection_text.insert(tk.END, text)
         else:
             self.detection_text.delete(1.0, tk.END)
-            self.detection_text.insert(tk.END, "Aucune detection...")
+            self.detection_text.insert(tk.END, "No detection...")
             
     def test_image(self):
         if self.model is None:
-            messagebox.showwarning("Attention", "Veuillez d'abord charger un modele!")
+            messagebox.showwarning("Warning", "Please load a model first!")
             return
             
         filepath = filedialog.askopenfilename(
-            title="Selectionner une image",
+            title="Select an image",
             initialdir=str(self.base_path / "Dataset"),
-            filetypes=[("Images", "*.jpg *.jpeg *.png *.bmp"), ("Tous les fichiers", "*.*")]
+            filetypes=[("Images", "*.jpg *.jpeg *.png *.bmp"), ("All files", "*.*")]
         )
         
         if filepath:
@@ -320,10 +317,10 @@ class YOLOTestInterface:
                 self.video_label.image = photo
                 
                 self.update_detections(results[0])
-                self.status_var.set(f"Image analysee: {Path(filepath).name}")
+                self.status_var.set(f"Image analyzed: {Path(filepath).name}")
                 
             except Exception as e:
-                messagebox.showerror("Erreur", f"Erreur lors de l'analyse:\n{str(e)}")
+                messagebox.showerror("Error", f"Analysis error:\n{str(e)}")
             
     def on_closing(self):
         self.running = False

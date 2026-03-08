@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-NewDriver - Jeu de Voiture controle par la tete
-Point d'entree principal
+NewDriver - Head-controlled car game
+Main entry point
 """
 
 import pygame
@@ -9,7 +9,6 @@ import cv2
 import sys
 from pathlib import Path
 
-# Ajouter le parent au path pour les imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from game.constants import *
@@ -19,11 +18,11 @@ from game.ui import Button, draw_road, draw_position_indicator, draw_hud, draw_g
 
 
 class Game:
-    """Jeu principal NewDriver"""
+    """Main NewDriver game class"""
     
     def __init__(self):
         pygame.init()
-        pygame.display.set_caption("NewDriver - Jeu de Voiture")
+        pygame.display.set_caption("NewDriver - Car Game")
         
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
@@ -31,27 +30,22 @@ class Game:
         self.small_font = pygame.font.Font(None, 28)
         self.big_font = pygame.font.Font(None, 80)
         
-        # Bouton test mode
         self.test_button = Button(SCREEN_WIDTH - 180, 10, 170, 40, "MODE TEST: OFF", GRAY, DARK_GRAY)
         self.test_mode = False
         
-        # Trouver le modele
         self.model_path = find_latest_model()
         if not self.model_path:
-            print("Erreur: Aucun modele trouve!")
-            print("Lancez d'abord l'entrainement: python training/train.py")
+            print("Error: no model found!")
+            print("Run training first: python training/train.py")
             exit(1)
             
-        print(f"Modele charge: {self.model_path}")
+        print(f"Model loaded: {self.model_path}")
         
-        # Tracker
         self.tracker = HeadTracker(self.model_path)
-        
-        # Etat du jeu
         self.reset_game()
         
     def reset_game(self):
-        """Reinitialise le jeu"""
+        """Reset the game state"""
         self.car = Car()
         self.obstacles = []
         self.score = 0
@@ -62,9 +56,9 @@ class Game:
         self.manual_direction = None
         
     def run(self):
-        """Boucle principale"""
+        """Main game loop"""
         if not self.tracker.start():
-            print("Impossible de demarrer la webcam")
+            print("Cannot start webcam")
             return
             
         running = True
@@ -105,7 +99,7 @@ class Game:
         pygame.quit()
         
     def toggle_test_mode(self):
-        """Active/desactive le mode test"""
+        """Toggle test mode on/off"""
         self.test_mode = not self.test_mode
         self.test_button.is_active = self.test_mode
         self.test_button.text = "MODE TEST: ON" if self.test_mode else "MODE TEST: OFF"
@@ -113,7 +107,7 @@ class Game:
             self.obstacles.clear()
         
     def update(self):
-        """Met a jour le jeu"""
+        """Update the game state"""
         direction, action, _, _ = self.tracker.get_state()
         
         if self.manual_direction:
@@ -142,7 +136,7 @@ class Game:
         self.road_offset = (self.road_offset + self.car.speed) % 60
         
     def draw(self):
-        """Dessine le jeu"""
+        """Draw all game elements"""
         draw_road(self.screen, self.road_offset)
         
         if not self.test_mode:
@@ -150,7 +144,6 @@ class Game:
                 obstacle.draw(self.screen)
             
         self.car.draw(self.screen)
-        
         draw_position_indicator(self.screen, self.car.x, self.small_font)
         
         direction, action, _, detections = self.tracker.get_state()
@@ -159,7 +152,6 @@ class Game:
                 direction, action, detections, self.test_mode)
         
         self.test_button.draw(self.screen, self.small_font)
-        
         self.draw_webcam()
         
         if self.game_over:
@@ -168,7 +160,7 @@ class Game:
         pygame.display.flip()
         
     def draw_webcam(self):
-        """Affiche la webcam"""
+        """Display the webcam feed"""
         frame = self.tracker.get_frame()
         if frame is not None:
             small = cv2.resize(frame, (200, 150))

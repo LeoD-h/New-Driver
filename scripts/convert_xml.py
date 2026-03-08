@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
 """
-Script de conversion des labels XML vers format YOLO
+Convert XML labels to YOLO format
 """
 
 import xml.etree.ElementTree as ET
 from pathlib import Path
 import os
 
-# Classes
-CLASSES = ['visage_serieux', 'livre_droite', 'livre_milieu', 'livre_gauche', 'visage_sourire']
+# YOLO class names (French labels kept as identifiers)
+CLASSES = [
+    'visage_serieux',    # serious face
+    'livre_droite',      # book right
+    'livre_milieu',      # book center
+    'livre_gauche',      # book left
+    'visage_sourire'     # smiling face
+]
 
 
 def convert_xml_to_yolo(xml_path, output_dir):
-    """Convertit un fichier XML en format YOLO"""
+    """Convert a single XML annotation file to YOLO format"""
     tree = ET.parse(xml_path)
     root = tree.getroot()
     
@@ -36,7 +42,7 @@ def convert_xml_to_yolo(xml_path, output_dir):
             xmax = float(bbox.find('xmax').text)
             ymax = float(bbox.find('ymax').text)
             
-            # Convertir en format YOLO (centre x, centre y, largeur, hauteur)
+            # Convert to YOLO format (center_x, center_y, width, height)
             x_center = (xmin + xmax) / 2 / img_width
             y_center = (ymin + ymax) / 2 / img_height
             width = (xmax - xmin) / img_width
@@ -52,7 +58,7 @@ def main():
     
     for xml_file in xml_dir.glob("*.xml"):
         convert_xml_to_yolo(xml_file, output_dir)
-        print(f"Converti: {xml_file.name}")
+        print(f"Converted: {xml_file.name}")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 """
-Entites du jeu: Voiture et Obstacles
+Game entities: Car and Obstacles
 """
 
 import pygame
@@ -8,7 +8,7 @@ from .constants import *
 
 
 class Car:
-    """Voiture du joueur"""
+    """Player car"""
     
     def __init__(self):
         self.x = ROAD_LEFT + ROAD_WIDTH // 2 - CAR_WIDTH // 2
@@ -19,7 +19,7 @@ class Car:
         self.steering_speed = 0.05
         
     def update(self, direction, action):
-        """Met a jour la position de la voiture"""
+        """Update car position and speed based on direction and action"""
         if direction == "GAUCHE":
             self.target_x = ROAD_LEFT + LANE_WIDTH // 2
         elif direction == "DROITE":
@@ -27,37 +27,28 @@ class Car:
         else:
             self.target_x = ROAD_LEFT + ROAD_WIDTH // 2 - CAR_WIDTH // 2
             
-        # Mouvement fluide
+        # Smooth movement
         diff = self.target_x - self.x
         self.x += diff * self.steering_speed
-        
-        # Limites
         self.x = max(ROAD_LEFT + 10, min(self.x, ROAD_RIGHT - CAR_WIDTH - 10))
         
-        # Vitesse
         if action == "ACCELERER":
             self.speed = min(self.speed + 0.3, self.max_speed)
         else:
             self.speed = max(self.speed - 0.2, 2)
             
     def draw(self, screen):
-        """Dessine la voiture"""
-        # Ombre
+        """Draw the car with shadow, body, roof, windshield, headlights and taillights"""
         pygame.draw.ellipse(screen, (30, 30, 30), 
                            (self.x - 5, self.y + CAR_HEIGHT - 10, CAR_WIDTH + 10, 20))
-        # Corps
         pygame.draw.rect(screen, BLUE, 
                         (self.x, self.y, CAR_WIDTH, CAR_HEIGHT), border_radius=12)
-        # Toit
         pygame.draw.rect(screen, (40, 80, 200), 
                         (self.x + 8, self.y + 20, CAR_WIDTH - 16, 40), border_radius=8)
-        # Pare-brise
         pygame.draw.rect(screen, (100, 150, 255), 
                         (self.x + 10, self.y + 22, CAR_WIDTH - 20, 15), border_radius=4)
-        # Phares
         pygame.draw.circle(screen, YELLOW, (int(self.x + 12), int(self.y + 8)), 6)
         pygame.draw.circle(screen, YELLOW, (int(self.x + CAR_WIDTH - 12), int(self.y + 8)), 6)
-        # Feux arriere
         pygame.draw.rect(screen, RED, (self.x + 5, self.y + CAR_HEIGHT - 10, 10, 6), border_radius=2)
         pygame.draw.rect(screen, RED, (self.x + CAR_WIDTH - 15, self.y + CAR_HEIGHT - 10, 10, 6), border_radius=2)
         
@@ -66,7 +57,7 @@ class Car:
 
 
 class Obstacle:
-    """Obstacle a eviter"""
+    """Obstacle to avoid"""
     
     def __init__(self):
         self.x = random.randint(ROAD_LEFT + 20, ROAD_RIGHT - OBSTACLE_WIDTH - 20)
@@ -74,11 +65,11 @@ class Obstacle:
         self.type = random.choice(["car", "rock", "cone"])
         
     def update(self, speed):
-        """Deplace l'obstacle vers le bas"""
+        """Move the obstacle downward"""
         self.y += speed + 3
         
     def draw(self, screen):
-        """Dessine l'obstacle"""
+        """Draw the obstacle based on its type"""
         if self.type == "car":
             pygame.draw.rect(screen, RED, 
                            (self.x, self.y, OBSTACLE_WIDTH, OBSTACLE_HEIGHT + 30), border_radius=10)

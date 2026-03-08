@@ -1,6 +1,6 @@
 """
-Tracker de tete pour NewDriver
-Detecte la position du livre et l'expression du visage
+Head tracker for NewDriver
+Detects book position and facial expression via YOLO
 """
 
 import cv2
@@ -10,14 +10,14 @@ from pathlib import Path
 try:
     from ultralytics import YOLO
 except ImportError:
-    print("Erreur: ultralytics n'est pas installe")
+    print("Error: ultralytics is not installed")
     exit(1)
 
 from .constants import CLASS_NAMES
 
 
 class HeadTracker:
-    """Detecteur de position du livre et expression via YOLO"""
+    """Book position and facial expression detector using YOLO"""
     
     def __init__(self, model_path):
         self.model = YOLO(str(model_path))
@@ -30,14 +30,14 @@ class HeadTracker:
         self.lock = threading.Lock()
         self.detections = []
         
-        # INVERSION DES CONTROLES (camera miroir)
+        # Invert X controls (mirrored camera)
         self.invert_x = True
         
     def start(self):
-        """Demarre la capture webcam"""
+        """Start the webcam capture"""
         self.cap = cv2.VideoCapture(0)
         if not self.cap.isOpened():
-            print("Erreur: Impossible d'ouvrir la webcam")
+            print("Error: cannot open webcam")
             return False
         
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -51,22 +51,21 @@ class HeadTracker:
         return True
         
     def stop(self):
-        """Arrete la capture"""
+        """Stop the capture"""
         self.running = False
         if self.cap:
             self.cap.release()
             
     def _capture_loop(self):
-        """Boucle de capture et detection"""
+        """Capture and detection loop"""
         while self.running:
             ret, frame = self.cap.read()
             if not ret:
                 continue
                 
-            # Detection YOLO
             results = self.model(frame, conf=0.25, imgsz=320, verbose=False)
             
-            # Collecter toutes les detections par type
+            # Collect all detections by type
             livre_detections = {}
             visage_detections = {}
             detected = []
@@ -78,38 +77,36 @@ class HeadTracker:
                     
                     detected.append(f"{CLASS_NAMES.get(cls_id, '?')}: {conf:.0%}")
                     
-                    # Livre (1=droite, 2=milieu, 3=gauche)
                     if cls_id in [1, 2, 3]:
                         if cls_id not in livre_detections or conf > livre_detections[cls_id]:
                             livre_detections[cls_id] = conf
                             
-                    # Visage (0=serieux, 4=sourire)
                     if cls_id in [0, 4]:
                         if cls_id not in visage_detections or conf > visage_detections[cls_id]:
                             visage_detections[cls_id] = conf
             
-            # Determiner la direction
+            # Determine direction from book position
             direction = "MILIEU"
             max_livre_conf = 0.0
             
             for cls_id, conf in livre_detections.items():
                 if conf > max_livre_conf:
                     max_livre_conf = conf
-                    if cls_id == 1:  # livre_droite
+                    if cls_id == 1:
                         direction = "DROITE"
-                    elif cls_id == 3:  # livre_gauche
+                    elif cls_id == 3:
                         direction = "GAUCHE"
-                    elif cls_id == 2:  # livre_milieu
+                    elif cls_id == 2:
                         direction = "MILIEU"
             
-            # INVERSION des controles X (camera miroir)
+            # Invert X controls for mirrored camera
             if self.invert_x:
                 if direction == "DROITE":
                     direction = "GAUCHE"
                 elif direction == "GAUCHE":
                     direction = "DROITE"
             
-            # Determiner l'action - STOP par defaut
+            # Determine action from facial expression (default STOP)
             action = "STOP"
             max_visage_conf = 0.0
             
@@ -135,21 +132,20 @@ class HeadTracker:
                 self.detections = detected
                 
     def get_state(self):
-        """Retourne l'etat actuel"""
+        """Return the current state"""
         with self.lock:
             return self.current_direction, self.current_action, self.confidence, self.detections
             
     def get_frame(self):
-        """Retourne le dernier frame (en miroir pour affichage)"""
+        """Return the last frame (mirrored for display)"""
         with self.lock:
             if self.frame is not None:
-                # Flip horizontal pour que l'utilisateur se voie en miroir
                 return cv2.flip(self.frame.copy(), 1)
             return None
 
 
 def find_latest_model():
-    """Trouve le dernier modele entraine"""
+    """Find the most recently trained model"""
     runs_path = Path(__file__).parent.parent / "training" / "runs" / "detect"
     if not runs_path.exists():
         runs_path = Path("/Users/leod/Documents/Dev/NewDriver/training/runs/detect")
@@ -167,7 +163,7 @@ def find_latest_model():
             if last_path.exists():
                 return last_path
     
-    # Fallback: chercher dans scripts/runs
+    # Fallback: check scripts/runs
     scripts_runs = Path("/Users/leod/Documents/Dev/NewDriver/scripts/runs/detect")
     if scripts_runs.exists():
         train_dirs = sorted(

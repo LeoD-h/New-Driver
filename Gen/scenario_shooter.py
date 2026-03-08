@@ -3,17 +3,17 @@ import os
 import time
 
 CAMERA_INDEX = 0
-PHOTOS_PAR_SCENARIO = 15
-COMPTE_A_REBOURS = 2
+PHOTOS_PER_SCENARIO = 15
+COUNTDOWN_SECONDS = 2
 
 SCENARIOS = [
-    # "Sourire_Livre_Gauche",
-    # "Sourire_Livre_Droite",
-    # "Sourire_Livre_Milieu",
-    # "Serieux_Livre_Droite",
-    # "Serieux_Livre_Gauche",
-    # "Serieux_Livre_Milieu"
-    "vide"
+    # "Sourire_Livre_Gauche",      # smile + book left
+    # "Sourire_Livre_Droite",      # smile + book right
+    # "Sourire_Livre_Milieu",      # smile + book center
+    # "Serieux_Livre_Droite",      # serious + book right
+    # "Serieux_Livre_Gauche",      # serious + book left
+    # "Serieux_Livre_Milieu"       # serious + book center
+    "vide"                         # empty
 ]
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -61,12 +61,12 @@ for scenario in SCENARIOS:
     photos_taken = 0
     start_time = time.time()
     
-    while photos_taken < PHOTOS_PAR_SCENARIO:
+    while photos_taken < PHOTOS_PER_SCENARIO:
         ret, frame = cap.read()
         if not ret: break
         
         elapsed = time.time() - start_time
-        remaining = COMPTE_A_REBOURS - elapsed
+        remaining = COUNTDOWN_SECONDS - elapsed
 
         if remaining > 0:
             center_x = 320
@@ -89,7 +89,7 @@ for scenario in SCENARIOS:
                 os.system("afplay /System/Library/Sounds/Tink.aiff")
                 
                 photos_taken += 1
-                print(f"   [{photos_taken}/{PHOTOS_PAR_SCENARIO}] {filename}")
+                print(f"   [{photos_taken}/{PHOTOS_PER_SCENARIO}] {filename}")
                 start_time = time.time()
                 continue
 

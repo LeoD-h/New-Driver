@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NewDriver Web - Interface Flask avec detection YOLO + Eye Tracking
+NewDriver Web - Flask interface with YOLO detection and eye tracking
 """
 
 from flask import Flask, render_template, Response, jsonify, request
@@ -18,63 +18,56 @@ except ImportError:
 
 app = Flask(__name__)
 
-# Configuration
+# YOLO class mapping
 CLASS_NAMES = {
-    0: "visage_serieux",
-    1: "livre_droite", 
-    2: "livre_milieu",
-    3: "livre_gauche",
-    4: "visage_sourire"
+    0: "visage_serieux",   # serious face
+    1: "livre_droite",     # book right
+    2: "livre_milieu",     # book center
+    3: "livre_gauche",     # book left
+    4: "visage_sourire"    # smiling face
 }
 
 
 class EyeTracker:
-    """Detecteur de regard base sur OpenCV (sans MediaPipe)"""
+    """Gaze detector based on OpenCV (without MediaPipe)"""
     
     def __init__(self):
-        # Charger le detecteur de visage et yeux d'OpenCV
         cv2_path = cv2.data.haarcascades
         self.face_cascade = cv2.CascadeClassifier(cv2_path + 'haarcascade_frontalface_default.xml')
         self.eye_cascade = cv2.CascadeClassifier(cv2_path + 'haarcascade_eye.xml')
         
     def analyze(self, frame):
-        """Analyse le regard"""
+        """Analyze gaze direction"""
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = self.face_cascade.detectMultiScale(gray, 1.3, 5)
         
         if len(faces) == 0:
             return "NO_FACE", 0.5, False
         
-        # Prendre le premier visage
         x, y, w, h = faces[0]
         roi_gray = gray[y:y+h, x:x+w]
-        
-        # Detecter les yeux
         eyes = self.eye_cascade.detectMultiScale(roi_gray, 1.1, 3)
         
         if len(eyes) < 2:
-            # Moins de 2 yeux detectes = yeux fermes ou regarde ailleurs
             return "DETOURNE", 0.5, False
         
-        # Calculer la position moyenne des yeux
+        # Average eye position relative to face width
         eye_centers = []
         for (ex, ey, ew, eh) in eyes[:2]:
             eye_center_x = ex + ew // 2
             eye_centers.append(eye_center_x)
         
-        # Position moyenne relative au visage
         avg_eye_x = sum(eye_centers) / len(eye_centers)
         ratio = avg_eye_x / w
         
-        # Determiner la direction
         if ratio < 0.35:
-            direction = "GAUCHE"
+            direction = "GAUCHE"    # left
             looking = False
         elif ratio > 0.65:
-            direction = "DROITE"
+            direction = "DROITE"   # right
             looking = False
         else:
-            direction = "CENTRE"
+            direction = "CENTRE"   # center
             looking = True
         
         return direction, ratio, True
@@ -85,7 +78,7 @@ class GameState:
         self.model = None
         self.cap = None
         self.running = False
-        self.direction = "MILIEU"
+        self.direction = "MILIEU"   # center
         self.action = "STOP"
         self.speed = 0
         self.score = 0
@@ -95,14 +88,11 @@ class GameState:
         self.game_active = False
         self.lock = threading.Lock()
         
-        # Eye tracking
         self.looking_at_screen = True
-        self.eye_direction = "CENTRE"
+        self.eye_direction = "CENTRE"   # center
         self.gaze_ratio = 0.5
         self.eyes_open = True
         self.last_frame = None
-        
-        # Eye tracker
         self.eye_tracker = EyeTracker()
 
 state = GameState()
@@ -130,7 +120,7 @@ def load_model():
     model_path = find_model()
     if model_path:
         state.model = YOLO(str(model_path))
-        print(f"Modele charge: {model_path}")
+        print(f"Model loaded: {model_path}")
         return True
     return False
 
@@ -149,7 +139,6 @@ def detection_loop():
         if not ret:
             continue
         
-        # Flip pour miroir
         frame = cv2.flip(frame, 1)
         state.last_frame = frame.copy()
             
@@ -159,15 +148,12 @@ def detection_loop():
             fps_counter = 0
             last_fps_time = time.time()
         
-        # Detection YOLO
         results = state.model(frame, conf=0.25, imgsz=320, verbose=False)
-        
-        # Analyse du regard
         eye_dir, gaze_ratio, eyes_open = state.eye_tracker.analyze(frame)
         
-        # Analyser les resultats YOLO
-        livre_det = {}
-        visage_det = {}
+        # Collect YOLO detections by type
+        livre_det = {}     # book detections
+        visage_det = {}    # face detections
         detections = []
         
         for result in results:
@@ -176,34 +162,34 @@ def detection_loop():
                 conf = float(box.conf[0])
                 detections.append({"class": CLASS_NAMES.get(cls_id, "?"), "conf": conf})
                 
-                if cls_id in [1, 2, 3]:
+                if cls_id in [1, 2, 3]:    # livre (book) classes
                     if cls_id not in livre_det or conf > livre_det[cls_id]:
                         livre_det[cls_id] = conf
-                if cls_id in [0, 4]:
+                if cls_id in [0, 4]:        # visage (face) classes
                     if cls_id not in visage_det or conf > visage_det[cls_id]:
                         visage_det[cls_id] = conf
         
-        # Direction basee sur le livre (CONTROLES INVERSES)
-        direction = "MILIEU"
+        # Direction based on book position (inverted controls)
+        direction = "MILIEU"   # center
         max_conf = 0
         for cls_id, conf in livre_det.items():
             if conf > max_conf:
                 max_conf = conf
-                if cls_id == 1:  # livre_droite -> voiture DROITE
+                if cls_id == 1:    # livre_droite (book right)
                     direction = "DROITE"
-                elif cls_id == 3:  # livre_gauche -> voiture GAUCHE
+                elif cls_id == 3:  # livre_gauche (book left)
                     direction = "GAUCHE"
-                elif cls_id == 2:
+                elif cls_id == 2:  # livre_milieu (book center)
                     direction = "MILIEU"
         
-        # Action basee sur le visage ET le regard
+        # Action based on face expression and gaze
         action = "STOP"
         looking_at_screen = (eye_dir == "CENTRE") and eyes_open
         
         if looking_at_screen:
-            if 4 in visage_det:
+            if 4 in visage_det:    # visage_sourire (smiling face)
                 if visage_det[4] > visage_det.get(0, 0):
-                    action = "ACCELERER"
+                    action = "ACCELERER"   # accelerate
         
         with state.lock:
             state.direction = direction
@@ -221,9 +207,9 @@ def detection_loop():
                     state.speed = max(state.speed - 1, 0)
                 
                 target = 50
-                if direction == "GAUCHE":
+                if direction == "GAUCHE":      # left
                     target = 15
-                elif direction == "DROITE":
+                elif direction == "DROITE":    # right
                     target = 85
                 state.car_x += (target - state.car_x) * 0.05
                 
@@ -239,18 +225,17 @@ def generate_frames():
         
         frame = state.last_frame.copy()
         
-        # Detection YOLO
         if state.model:
             results = state.model(frame, conf=0.25, imgsz=320, verbose=False)
             frame = results[0].plot()
         
-        # Ajouter indicateur de regard
+        # Add gaze indicator overlay
         with state.lock:
             color = (0, 255, 0) if state.looking_at_screen else (0, 0, 255)
-            text = f"Regard: {state.eye_direction}"
+            text = f"Gaze: {state.eye_direction}"
             cv2.putText(frame, text, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
             
-            eyes_text = "Yeux: OUVERTS" if state.eyes_open else "Yeux: FERMES"
+            eyes_text = "Eyes: OPEN" if state.eyes_open else "Eyes: CLOSED"
             cv2.putText(frame, eyes_text, (10, 85), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
         
         _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
@@ -279,7 +264,7 @@ def start():
             state.car_x = 50
             threading.Thread(target=detection_loop, daemon=True).start()
             return jsonify({"status": "started"})
-        return jsonify({"status": "error", "message": "Modele non trouve"})
+        return jsonify({"status": "error", "message": "Model not found"})
     return jsonify({"status": "already running"})
 
 

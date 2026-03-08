@@ -1,4 +1,4 @@
-# Environnement NewDriver
+# NewDriver environment
 # Activation: source scripts/env.sh
 
 # Conda environment

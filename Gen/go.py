@@ -21,7 +21,7 @@ def run():
     if os.path.exists(script_path):
         subprocess.run([sys.executable, script_path])
     else:
-        print(f"Le fichier {script_path} est introuvable.")
+        print(f"File {script_path} not found.")
 
 if __name__ == "__main__":
     run()
