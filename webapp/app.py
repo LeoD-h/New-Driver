@@ -127,12 +127,19 @@ def load_model():
 
 def detection_loop():
     state.cap = cv2.VideoCapture(0)
-    state.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    state.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    state.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+    state.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+    state.cap.set(cv2.CAP_PROP_FPS, 30)
     state.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     
     fps_counter = 0
     last_fps_time = time.time()
+    frame_count = 0
+    
+    # Cached eye tracking results
+    cached_eye_dir = "CENTRE"
+    cached_gaze_ratio = 0.5
+    cached_eyes_open = True
     
     while state.running:
         ret, frame = state.cap.read()
@@ -141,6 +148,7 @@ def detection_loop():
         
         frame = cv2.flip(frame, 1)
         state.last_frame = frame.copy()
+        frame_count += 1
             
         fps_counter += 1
         if time.time() - last_fps_time >= 1.0:
@@ -148,8 +156,12 @@ def detection_loop():
             fps_counter = 0
             last_fps_time = time.time()
         
-        results = state.model(frame, conf=0.25, imgsz=320, verbose=False)
-        eye_dir, gaze_ratio, eyes_open = state.eye_tracker.analyze(frame)
+        # YOLO detection on every frame
+        results = state.model(frame, conf=0.25, imgsz=160, verbose=False)
+        
+        # Eye tracking only every 5 frames (expensive)
+        if frame_count % 5 == 0:
+            cached_eye_dir, cached_gaze_ratio, cached_eyes_open = state.eye_tracker.analyze(frame)
         
         # Collect YOLO detections by type
         livre_det = {}     # book detections
@@ -184,7 +196,7 @@ def detection_loop():
         
         # Action based on face expression and gaze
         action = "STOP"
-        looking_at_screen = (eye_dir == "CENTRE") and eyes_open
+        looking_at_screen = (cached_eye_dir == "CENTRE") and cached_eyes_open
         
         if looking_at_screen:
             if 4 in visage_det:    # visage_sourire (smiling face)
@@ -196,9 +208,9 @@ def detection_loop():
             state.action = action
             state.detections = detections
             state.looking_at_screen = looking_at_screen
-            state.eye_direction = eye_dir
-            state.gaze_ratio = gaze_ratio
-            state.eyes_open = eyes_open
+            state.eye_direction = cached_eye_dir
+            state.gaze_ratio = cached_gaze_ratio
+            state.eyes_open = cached_eyes_open
             
             if state.game_active:
                 if action == "ACCELERER":
@@ -221,15 +233,12 @@ def detection_loop():
 def generate_frames():
     while state.running:
         if state.last_frame is None:
+            time.sleep(0.03)
             continue
         
         frame = state.last_frame.copy()
         
-        if state.model:
-            results = state.model(frame, conf=0.25, imgsz=320, verbose=False)
-            frame = results[0].plot()
-        
-        # Add gaze indicator overlay
+        # Add gaze indicator overlay (no duplicate YOLO inference)
         with state.lock:
             color = (0, 255, 0) if state.looking_at_screen else (0, 0, 255)
             text = f"Gaze: {state.eye_direction}"

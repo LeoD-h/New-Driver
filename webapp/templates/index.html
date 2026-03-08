@@ -456,7 +456,7 @@
                 .then(r => r.json())
                 .then(data => {
                     document.getElementById('webcam').src = '/video_feed?' + Date.now();
-                    updateInterval = setInterval(updateState, 80);
+                    updateInterval = setInterval(updateState, 150);
                     if (!testMode) startObstacles();
                 });
         }
