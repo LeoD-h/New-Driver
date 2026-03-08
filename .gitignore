@@ -1,5 +1,9 @@
 # NewDriver .gitignore
 
+# Entire directories excluded from GitHub
+Dataset/
+scripts/
+
 # Images and photos (not uploaded to GitHub)
 *.jpg
 *.jpeg
